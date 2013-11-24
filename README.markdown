@@ -1,32 +1,37 @@
 Nginx Static Etags
 ------------------
 
-Nginx doesn't generate etags for static content.  I think it should.  If I can remember enough C from college to make it work as a module, I will.
+This module provides support for generating (or swapping) Etag header for static content in nginx.
 
 ### Installation
 
-Download the module however you like.  I'd recommend pulling it down with Git by simply cloning this repository:
+Prepare location for core and/or module code:
 
-    mkdir ~/src
-    cd    ~/src
-    git clone git clone git@github.com:kkung/nginx-static-etags.git ./nginx-static-stags
+    mkdir ${HOME}/src
+    cd ${HOME}/src
 
-To use the module, you'll have to compile it into Nginx.  So, download the Nginx source, configure it with the module path, and compile:
+Pull code by cloning the repositories and/or downloading packages:
 
-    mkdir ~/src
-    cd ~/src
-    curl -O http://sysoev.ru/nginx/nginx-0.6.32.tar.gz
-    tar -zxvf ./nginx-0.6.32.tar.gz
-    cd ./nginx-0.6.32
-    ./configure --add-module=/~src/nginx-static-etags
-    make
+    # download nginx sources and unpack
+    curl http://nginx.org/download/nginx-1.4.4.tar.gz | tar xzf -
+    # download module sources
+    git clone https://github.com/soutys/nginx-static-etags.git ./nginx-static-etags
+
+Compile module into nginx:
+
+    cd ./nginx-1.4.4
+    # add other options, modules, CFLAGS if you like...
+    ./configure --add-module=${HOME}/src/nginx-static-etags
+    # multithreaded compilation is also "supported" :)
+    make -j4
+    # use root privileges or define your own `--prefix=...` option for `configure` script
     sudo make install
-    
-And you're done!
+
+That's (almost) all!
 
 ### Configuration
 
-Add `etags` to the relevant `location` blocks in your `nginx.conf` file:
+Update relevant `location` blocks in your `nginx.conf` file:
 
     location / {
         ...
@@ -36,6 +41,29 @@ Add `etags` to the relevant `location` blocks in your `nginx.conf` file:
         ...
     }
 
-It's currently an on/off toggle.  The plan is to bring it to feature parity with [the Apache configuration option][apache].  It's really not there yet.
+### Optional pre/post-compilation tests
+
+  * code checks:
+
+    ```
+    cppcheck --verbose --enable=all --inconclusive ${HOME}/src/ngx_http_static_etags_module.c
+    valgrind --verbose --leak-check=full --show-reachable=yes --track-origins=yes /usr/local/nginx/sbin/nginx
+    ```
+
+  * debugging:
+
+    * [no-pool nginx](https://github.com/shrimp/no-pool-nginx)
+    * [nginx - Debugging](http://wiki.nginx.org/Debugging)
+    * [nginx debug mode](http://www.bedis.eu/nginx/nginx_debug_mode)
+    * [Day 36 - nginx debug and valgrind from Eclipse](http://www.nginx-discovery.com/2011/03/day-36-nginx-debug-and-valgrind-from.html)
+
+### TODOs
+
+ * bring it to feature parity with [the Apache configuration option][apache]
+
+### Credits
+
+ *  [Mike West](http://mikewest.org/)
+ *  [Adrian Jung](http://me2day.net/kkung)
 
 [apache]: http://httpd.apache.org/docs/1.3/mod/core.html#fileetag
